@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_from_directory
 from pymysql import connections
 import os
 import random
@@ -20,12 +20,13 @@ DBPWD = os.environ.get("DBPWD") or "password"
 DATABASE = os.environ.get("DATABASE") or "employees"
 COLOR_FROM_ENV = os.environ.get('APP_COLOR') or "lime"
 DBPORT = int(os.environ.get("DBPORT", 3306))
-BACKGROUND_IMAGE_URL = os.environ.get("BACKGROUND_IMAGE_URL") or "https://clo835-finalproject-g8.s3.us-east-1.amazonaws.com/background.jpg"
 YOUR_NAME = os.environ.get("YOUR_NAME") or "CLO835 Student"
 
-# S3 Configuration
-S3_BUCKET = os.environ.get("S3_BUCKET") or ""
+# S3 Configuration for background image download
+S3_BUCKET = os.environ.get("S3_BUCKET") or "clo835-finalproject-g8"
+S3_IMAGE_KEY = os.environ.get("S3_IMAGE_KEY") or "background.jpg"
 AWS_REGION = os.environ.get("AWS_REGION") or "us-east-1"
+LOCAL_IMAGES_FOLDER = "images"  # Local folder for downloaded images
 
 # Create a connection to the MySQL database
 db_conn = connections.Connection(
@@ -50,14 +51,64 @@ color_codes = {
 SUPPORTED_COLORS = ",".join(color_codes.keys())
 COLOR = random.choice(["red", "green", "blue", "blue2", "darkblue", "pink", "lime"])
 
-def get_background_image():
-    """Return the S3 background image URL directly"""
-    if BACKGROUND_IMAGE_URL:
-        logger.info(f"Using background image: {BACKGROUND_IMAGE_URL}")
-        return BACKGROUND_IMAGE_URL
-    else:
-        logger.info("No background image URL specified")
+def download_background_image():
+    """Download background image from S3 and store locally"""
+    try:
+        # Create S3 client
+        s3 = boto3.client('s3', region_name=AWS_REGION)
+        
+        # Create local images folder if it doesn't exist
+        if not os.path.exists(LOCAL_IMAGES_FOLDER):
+            os.makedirs(LOCAL_IMAGES_FOLDER)
+            logger.info(f"Created folder: {LOCAL_IMAGES_FOLDER}")
+        
+        # Get filename from S3 key
+        filename = os.path.basename(S3_IMAGE_KEY)
+        local_path = os.path.join(LOCAL_IMAGES_FOLDER, filename)
+        
+        # Check if image already exists locally
+        if os.path.exists(local_path):
+            logger.info(f"Background image already exists locally: {local_path}")
+            return f"/static/images/{filename}"
+        
+        # Download the image
+        logger.info(f"Downloading {S3_IMAGE_KEY} from bucket {S3_BUCKET}...")
+        s3.download_file(S3_BUCKET, S3_IMAGE_KEY, local_path)
+        
+        logger.info(f"✅ Background image downloaded successfully!")
+        logger.info(f"📁 Saved to: {local_path}")
+        
+        # Return the URL path for the template
+        return f"/images/{filename}"
+        
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        if error_code == 'NoSuchBucket':
+            logger.error(f"S3 bucket '{S3_BUCKET}' does not exist")
+        elif error_code == 'NoSuchKey':
+            logger.error(f"S3 object '{S3_IMAGE_KEY}' not found in bucket '{S3_BUCKET}'")
+        elif error_code == 'AccessDenied':
+            logger.error("Access denied to S3. Check your AWS credentials and permissions")
+        else:
+            logger.error(f"S3 ClientError: {e}")
         return None
+    except Exception as e:
+        logger.error(f"❌ Error downloading background image: {e}")
+        return None
+
+def get_background_image():
+    """Get the background image URL (local path after download)"""
+    # First try to download/get local image
+    local_image_url = download_background_image()
+    
+    if local_image_url:
+        logger.info(f"Using local background image: {local_image_url}")
+        return local_image_url
+    else:
+        # Fallback to direct S3 URL if download fails
+        fallback_url = f"https://{S3_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{S3_IMAGE_KEY}"
+        logger.info(f"Fallback to S3 URL: {fallback_url}")
+        return fallback_url
 
 @app.route("/", methods=['GET', 'POST'])
 def home():
@@ -128,6 +179,11 @@ def FetchData():
                            location=output["location"], color=color_codes[COLOR],
                            background_image=background_image)
 
+# Route to serve images from the images folder
+@app.route('/images/<filename>')
+def serve_image(filename):
+    return send_from_directory(LOCAL_IMAGES_FOLDER, filename)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--color', required=False)
@@ -148,7 +204,9 @@ if __name__ == '__main__':
         print("Color not supported. Received '" + COLOR + "' expected one of " + SUPPORTED_COLORS)
         exit(1)
 
-    # Log background image URL
-    logger.info(f"Background image URL: {BACKGROUND_IMAGE_URL}")
+    # Download background image on startup
+    logger.info("Initializing background image download...")
+    background_image_url = get_background_image()
+    logger.info(f"Background image ready: {background_image_url}")
     
     app.run(host='0.0.0.0',port=81,debug=True)
