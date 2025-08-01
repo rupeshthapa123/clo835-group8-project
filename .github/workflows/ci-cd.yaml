@@ -1,0 +1,57 @@
+name: Build and Deploy to ECR
+on:
+  push:
+    branches: [ dev ]  # trigger on dev branch
+  pull_request:
+    branches: [ dev ]
+  workflow_dispatch:  # optional: allow manual trigger from GitHub UI
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY_FLASK: clo835-flask-app
+  ECR_REPOSITORY_MYSQL: clo835-mysql-app
+
+jobs:
+  build-and-push:
+    name: Build and Push to ECR
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+      
+    - name: Build, tag, and push Flask app image to Amazon ECR
+      env:
+        ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+      run: |
+        echo "Building Flask application image..."
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_FLASK:latest -f docker/Dockerfile docker/
+        echo "Pushing Flask application image to ECR..."
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY_FLASK:latest
+        
+    - name: Build, tag, and push MySQL image to Amazon ECR
+      env:
+        ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+      run: |
+        echo "Building MySQL image..."
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_MYSQL:latest -f docker/Dockerfile_mysql docker/
+        echo "Pushing MySQL image to ECR..."
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY_MYSQL:latest
+        
+    - name: Summary
+      run: |
+        echo "Build and push completed successfully!"
+        echo "Flask image: ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY_FLASK }}:latest"
+        echo "MySQL image: ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY_MYSQL }}:latest"
