@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: final
+data:
+  BACKGROUND_IMAGE_URL: "https://clo835-finalproject-g8.s3.us-east-1.amazonaws.com/background.jpg"
+  YOUR_NAME: "Group 8"
+  APP_COLOR: "lime"
+  S3_BUCKET: "clo835-finalproject-g8"
+  AWS_REGION: "us-east-1"
