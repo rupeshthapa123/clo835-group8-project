@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee Information - {{ user_name }}</title>
+    <style>
+        body {
+            {% if background_image %}
+            background-image: url('{{ background_image }}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            {% else %}
+            background-color: {{ color }};
+            {% endif %}
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            border-radius: 10px;
+        }
+        .header {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ user_name }} - Employee Management System</h1>
+    </div>
+    <center>
+        <div class="container">
+            <font color="black" size="5" style="font-family: avenir">
+                <h1 style="color: DodgerBlue">Employee Information</h1>
+                <form>
+                    <div>
+                        Employee ID:<br> {{ id }} <br><br>
+                        First Name:<br> {{ fname }} <br><br>
+                        Last Name:<br> {{ lname }} <br><br>
+                        Primary Interest:<br> {{ interest }} <br><br>
+                        Location:<br> {{ location }} <br><br>
+                    </div>
+                </form>
+                <a href="{{ url_for('home') }}">Back</a>
+            </font>
+        </div>
+    </center>
+</body>
+</html>

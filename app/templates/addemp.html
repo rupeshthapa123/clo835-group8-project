@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Employee Information - {{ user_name }}</title>
+    <style>
+        body {
+            {% if background_image %}
+            background-image: url('{{ background_image }}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            {% else %}
+            background-color: {{ color }};
+            {% endif %}
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            border-radius: 10px;
+        }
+        .header {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ user_name }} - Employee Management System</h1>
+    </div>
+    <center>
+        <div class="container">
+            <font color="black" size="4" style="font-family: avenir">
+                <h1 style="color: DodgerBlue">Employee Database</h1>
+                <form action="/addemp" autocomplete="on" method="POST" enctype="multipart/form-data">
+                    Employee ID:<br> <input style="height:25px;font-size:14pt; color:grey;" type="number" name="emp_id" autofocus size="40"><br><br>
+                    First Name:<br> <input style="height:25px;font-size:14pt;color:grey;" type="text" name="first_name"><br><br>
+                    Last Name:<br> <input style="height:25px;font-size:14pt;color:grey;" type="text" name="last_name"><br><br>
+                    Primary Skills:<br> <input style="height:25px;font-size:14pt;color:grey;" type="text" name="primary_skill"><br><br>
+                    Location:<br> <input style="height:25px;font-size:14pt;color:grey;" type="text" name="location"><br><br>
+                    <button type="submit" style="background: grey; height: 45px; width: 200px; color: white; size: 5; font:oblique;">UPDATE DATABASE</button><br><br>
+                    <button type="submit" formaction="/getemp" style="background: grey; height: 45px; width: 200px; color:white; font:oblique;">GET EMPLOYEE INFORMATION</button><br><br>
+                </form>
+                <br><br>
+                <a href="/about">About Us</a>
+            </font>
+        </div>
+    </center>
+</body>
+</html>

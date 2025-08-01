@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Employee Output - {{ user_name }}</title>
+    <style>
+        body {
+            {% if background_image %}
+            background-image: url('{{ background_image }}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            {% else %}
+            background-color: {{ color }};
+            {% endif %}
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .header {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ user_name }} - Employee Management System</h1>
+    </div>
+    <center>
+        <div class="container">
+            <font color="DodgerBlue" size="5" style="font-family: avenir">
+                <h1>The employee {{ name }} was successfully added to the database</h1><br>
+                <h2>The Employee has been added to the database</h2><br>
+                <h2>{{ name }}</h2><br>
+                <a href="{{ url_for('home') }}">Back</a>
+            </font>
+        </div>
+    </center>
+</body>
+</html>
